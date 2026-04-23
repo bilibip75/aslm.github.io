@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a1628">
+<title>⚽ Album Panini Club</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --green: #00c853;
+    --green-dark: #007e33;
+    --gold: #ffd600;
+    --navy: #0a1628;
+    --navy-mid: #112240;
+    --navy-light: #1a3a5c;
+    --white: #f0f4ff;
+    --gray: #8899bb;
+    --red: #ff3d57;
+    --card-bg: #0d1f3c;
+    --radius: 16px;
+    --shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  .app-header {
+    background: linear-gradient(135deg, var(--navy-mid) 0%, #0e2244 100%);
+    padding: 20px 20px 16px;
+    position: sticky; top: 0; z-index: 100;
+    border-bottom: 2px solid rgba(0,200,83,0.3);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .app-logo {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-ball {
+    width: 40px; height: 40px;
+    background: radial-gradient(circle at 35% 35%, #fff 0%, #ddd 60%, #aaa 100%);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5), inset 0 -3px 8px rgba(0,0,0,0.2);
+    position: relative; overflow: hidden;
+    flex-shrink: 0;
+  }
+  .logo-ball::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-conic-gradient(#333 0deg 60deg, transparent 60deg 120deg) center/10px 10px;
+    opacity: 0.15;
+    border-radius: 50%;
+  }
+  .app-title { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 2px; line-height:1; color: var(--white); }
+  .app-subtitle { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 3px; color: var(--green); text-transform: uppercase; }
+  .header-badge {
+    background: var(--green);
+    color: var(--navy);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px; font-weight: 700;
+    padding: 4px 10px; border-radius: 20px;
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+
+  /* ── NAV TABS ── */
+  .nav-tabs {
+    display: flex;
+    background: var(--navy-mid);
+    border-bottom: 2px solid rgba(255,255,255,0.05);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .nav-tab {
+    flex: 1; min-width: 80px;
+    padding: 14px 8px 10px;
+    text-align: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--gray);
+    border-bottom: 3px solid transparent;
+    cursor: pointer; transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .nav-tab.active { color: var(--green); border-bottom-color: var(--green); }
+  .nav-tab .tab-icon { font-size: 18px; display: block; margin-bottom: 2px; }
+
+  /* ── SCREENS ── */
+  .screen { display: none; padding: 20px; animation: fadeIn 0.25s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px; letter-spacing: 2px;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+  .section-sub { font-size: 13px; color: var(--gray); margin-bottom: 18px; }
+
+  /* ── SETUP SCREEN ── */
+  .setup-card {
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .setup-card-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .setup-card-title .step {
+    width: 24px; height: 24px;
+    background: var(--green); color: var(--navy);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; flex-shrink: 0;
+  }
+
+  .upload-zone {
+    border: 2px dashed rgba(0,200,83,0.4);
+    border-radius: 12px;
+    padding: 30px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: rgba(0,200,83,0.04);
+  }
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--green);
+    background: rgba(0,200,83,0.1);
+  }
+  .upload-zone .upload-icon { font-size: 36px; margin-bottom: 10px; }
+  .upload-zone .upload-text { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 600; color: var(--white); }
+  .upload-zone .upload-hint { font-size: 12px; color: var(--gray); margin-top: 4px; }
+  #xlsxInput { display: none; }
+
+  .input-group { margin-bottom: 14px; }
+  .input-label { font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--gray); margin-bottom: 6px; display: block; }
+  .input-field {
+    width: 100%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--white);
+    font-family: 'Barlow', sans-serif;
+    font-size: 14px;
+    transition: border-color 0.2s;
+  }
+  .input-field:focus { outline: none; border-color: var(--green); }
+  .input-field::placeholder { color: var(--gray); }
+
+  .btn {
+    display: block; width: 100%;
+    padding: 14px 20px;
+    border: none; border-radius: 12px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 17px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer; transition: all 0.2s;
+    text-align: center;
+  }
+  .btn-primary { background: var(--green); color: var(--navy); }
+  .btn-primary:hover { background: #00e676; transform: translateY(-1px); }
+  .btn-secondary { background: rgba(255,255,255,0.08); color: var(--white); border: 1px solid rgba(255,255,255,0.15); }
+  .btn-gold { background: var(--gold); color: var(--navy); }
+  .btn-danger { background: var(--red); color: white; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+  .btn-sm { padding: 9px 16px; font-size: 14px; width: auto; display: inline-block; }
+
+  /* ── STATUS / ALERTS ── */
+  .alert {
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 13px;
+    margin-bottom: 14px;
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .alert-success { background: rgba(0,200,83,0.15); border: 1px solid rgba(0,200,83,0.3); color: #80ffb2; }
+  .alert-error { background: rgba(255,61,87,0.15); border: 1px solid rgba(255,61,87,0.3); color: #ff8fa0; }
+  .alert-info { background: rgba(0,145,255,0.12); border: 1px solid rgba(0,145,255,0.25); color: #80c8ff; }
+  .alert-icon { font-size: 16px; flex-shrink: 0; }
+
+  /* ── STATS GRID ── */
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
+  .stat-card {
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 14px 10px;
+    text-align: center;
+  }
+  .stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 30px; color: var(--green); line-height:1; }
+  .stat-label { font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+
+  /* ── PHOTO SCREEN ── */
+  .category-selector {
+    margin-bottom: 20px;
+  }
+  .category-label { font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--gray); margin-bottom: 8px; display: block; }
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .cat-btn {
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 10px 6px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .cat-btn:hover { border-color: var(--green); background: rgba(0,200,83,0.08); }
+  .cat-btn.selected { border-color: var(--green); background: rgba(0,200,83,0.15); }
+  .cat-btn .cat-icon { font-size: 20px; display:block; margin-bottom: 3px; }
+  .cat-btn .cat-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--white);
+  }
+  .cat-btn .cat-count { font-size: 10px; color: var(--gray); margin-top: 1px; }
+
+  /* ── PLAYER SEARCH ── */
+  .player-search-wrap { position: relative; margin-bottom: 12px; }
+  .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 16px; }
+  .player-search {
+    width: 100%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    padding: 12px 14px 12px 38px;
+    color: var(--white);
+    font-family: 'Barlow', sans-serif;
+    font-size: 15px;
+  }
+  .player-search:focus { outline: none; border-color: var(--green); }
+
+  .player-list { max-height: 240px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--navy-light) transparent; }
+  .player-item {
+    display: flex; align-items: center;
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.18s;
+    gap: 12px;
+  }
+  .player-item:hover { border-color: var(--green); background: rgba(0,200,83,0.08); }
+  .player-item.selected { border-color: var(--green); background: rgba(0,200,83,0.15); }
+  .player-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--navy-light), var(--green-dark));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif; font-size: 16px;
+    color: var(--white); flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,0.1);
+  }
+  .player-item.selected .player-avatar { border-color: var(--green); background: linear-gradient(135deg, var(--green-dark), #00a044); }
+  .player-info { flex: 1; min-width: 0; }
+  .player-name { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .player-cat-badge {
+    display: inline-block;
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 4px;
+    background: rgba(0,200,83,0.15); color: var(--green);
+    margin-top: 3px;
+  }
+  .player-check { color: var(--green); font-size: 20px; }
+  .player-photo-status {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .status-ok { background: rgba(0,200,83,0.2); color: var(--green); }
+  .status-missing { background: rgba(255,61,87,0.15); color: var(--red); }
+
+  /* ── CAMERA ── */
+  .camera-section {
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .camera-player-header {
+    background: linear-gradient(90deg, rgba(0,200,83,0.2), rgba(0,200,83,0.05));
+    border-bottom: 1px solid rgba(0,200,83,0.2);
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .camera-player-number {
+    width: 36px; height: 36px;
+    background: var(--green); color: var(--navy);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif; font-size: 20px;
+    flex-shrink: 0;
+  }
+  .camera-player-name { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px; }
+  .camera-player-cat { font-size: 12px; color: var(--green); letter-spacing: 2px; text-transform: uppercase; }
+
+  .preview-wrap {
+    position: relative;
+    background: #000;
+    aspect-ratio: 3/4;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .preview-video, .preview-img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .preview-placeholder {
+    text-align: center; color: var(--gray);
+  }
+  .preview-placeholder .ph-icon { font-size: 64px; opacity: 0.3; }
+  .preview-placeholder .ph-text { font-size: 14px; margin-top: 10px; opacity: 0.5; }
+
+  /* Panini overlay frame */
+  .panini-frame {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    border: 4px solid var(--gold);
+    border-radius: 4px;
+  }
+  .panini-frame::before {
+    content: '';
+    position: absolute; inset: 8px;
+    border: 1px solid rgba(255,214,0,0.3);
+  }
+  .panini-badge {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(to top, rgba(10,22,40,0.95) 0%, transparent 100%);
+    padding: 30px 12px 12px;
+    text-align: center;
+  }
+  .panini-badge-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px; letter-spacing: 2px;
+    color: var(--gold);
+    text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+  }
+  .panini-badge-cat {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 3px; text-transform: uppercase;
+    color: var(--green); margin-top: 2px;
+  }
+
+  .camera-controls {
+    display: flex; gap: 10px;
+    padding: 14px;
+    background: rgba(0,0,0,0.3);
+    flex-wrap: wrap;
+  }
+  .btn-camera {
+    flex: 1; min-width: 0;
+    padding: 14px 8px;
+    border: none; border-radius: 12px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    cursor: pointer; transition: all 0.2s;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .btn-camera .btn-icon { font-size: 22px; }
+  .btn-camera.open-cam { background: var(--navy-light); color: var(--white); }
+  .btn-camera.take-photo { background: white; color: #111; }
+  .btn-camera.take-photo:disabled { opacity: 0.3; }
+  .btn-camera.from-gallery { background: var(--navy-light); color: var(--white); }
+  .btn-camera.upload-gdrive { background: linear-gradient(135deg, #1a73e8, #0d47a1); color: white; }
+  .btn-camera.upload-gdrive:disabled { opacity: 0.3; }
+  #cameraStream { display: none; }
+  #galleryInput { display: none; }
+
+  /* ── GALLERY SCREEN ── */
+  .gallery-filters {
+    display: flex; gap: 8px; overflow-x: auto;
+    scrollbar-width: none; margin-bottom: 18px; padding-bottom: 4px;
+  }
+  .gallery-filters::-webkit-scrollbar { display: none; }
+  .filter-chip {
+    flex-shrink: 0;
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: var(--card-bg);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--gray);
+    cursor: pointer; transition: all 0.18s;
+  }
+  .filter-chip.active { background: rgba(0,200,83,0.15); border-color: var(--green); color: var(--green); }
+
+  .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .gallery-card {
+    position: relative;
+    aspect-ratio: 3/4;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--card-bg);
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .gallery-card:hover { transform: scale(1.02); }
+  .gallery-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .gallery-card-overlay {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%);
+    padding: 20px 6px 6px;
+  }
+  .gallery-card-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 12px; letter-spacing: 1px;
+    color: var(--gold);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .gallery-card-cat {
+    font-size: 9px; color: var(--green);
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+  .gallery-card-empty {
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 4px;
+    height: 100%; color: rgba(255,255,255,0.12);
+    font-size: 28px;
+  }
+  .gallery-card-empty span { font-size: 9px; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.1); }
+
+  /* ── DRIVE SCREEN ── */
+  .drive-status-card {
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .drive-connected { border-color: rgba(0,200,83,0.3); }
+  .drive-disconnected { border-color: rgba(255,61,87,0.2); }
+  .drive-icon-row { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .drive-icon-big { font-size: 40px; }
+  .drive-status-label { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+  .drive-status-ok { color: var(--green); }
+  .drive-status-bad { color: var(--red); }
+
+  .progress-bar-wrap { margin-top: 10px; }
+  .progress-bar-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--gray); margin-bottom: 6px; }
+  .progress-bar { background: rgba(255,255,255,0.08); border-radius: 6px; height: 8px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--green), #00e676); transition: width 0.6s ease; }
+
+  .upload-queue {
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .queue-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--gold);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .queue-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .queue-item:last-child { border-bottom: none; }
+  .queue-thumb {
+    width: 36px; height: 48px;
+    object-fit: cover; border-radius: 6px;
+    background: var(--navy-light);
+    flex-shrink: 0;
+  }
+  .queue-info { flex: 1; min-width: 0; }
+  .queue-name { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .queue-cat { font-size: 11px; color: var(--gray); }
+  .queue-badge {
+    font-size: 11px; font-weight: 600;
+    padding: 3px 8px; border-radius: 5px;
+    flex-shrink: 0;
+  }
+  .q-pending { background: rgba(255,214,0,0.15); color: var(--gold); }
+  .q-uploading { background: rgba(0,145,255,0.15); color: #5bc0ff; }
+  .q-done { background: rgba(0,200,83,0.15); color: var(--green); }
+  .q-error { background: rgba(255,61,87,0.15); color: var(--red); }
+
+  /* ── MODAL / LIGHTBOX ── */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.85);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    animation: fadeIn 0.2s ease;
+  }
+  .modal-box {
+    background: var(--navy-mid);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--radius);
+    padding: 24px;
+    width: 100%; max-width: 400px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.8);
+  }
+  .modal-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px; letter-spacing: 2px;
+    color: var(--gold); margin-bottom: 14px;
+  }
+  .modal-close {
+    float: right; cursor: pointer;
+    font-size: 22px; color: var(--gray);
+    background: none; border: none; color: inherit;
+    margin-top: -4px;
+  }
+  .modal-photo {
+    width: 100%;
+    max-height: 55vh;
+    object-fit: contain;
+    border-radius: 10px;
+    margin-bottom: 14px;
+    border: 2px solid var(--gold);
+  }
+
+  /* ── TOAST ── */
+  .toast-container {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    z-index: 999; display: flex; flex-direction: column; align-items: center; gap: 8px;
+    pointer-events: none; width: 90%; max-width: 360px;
+  }
+  .toast {
+    background: #1c3154;
+    border: 1px solid rgba(0,200,83,0.3);
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-size: 14px;
+    color: var(--white);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    animation: toastIn 0.3s ease, toastOut 0.3s ease 2.5s forwards;
+    display: flex; align-items: center; gap: 10px;
+    width: 100%;
+  }
+  .toast.error { border-color: rgba(255,61,87,0.4); }
+  @keyframes toastIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes toastOut { from { opacity:1; } to { opacity:0; } }
+
+  /* ── MISC ── */
+  .empty-state {
+    text-align: center; padding: 50px 20px; color: var(--gray);
+  }
+  .empty-state .empty-icon { font-size: 56px; opacity:0.25; margin-bottom: 14px; }
+  .empty-state .empty-title { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; }
+  .empty-state .empty-text { font-size: 13px; line-height: 1.6; }
+
+  .spinner {
+    display: inline-block;
+    width: 18px; height: 18px;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-top-color: var(--green);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── INSTRUCTIONS CARD ── */
+  .instructions {
+    background: rgba(0,145,255,0.06);
+    border: 1px solid rgba(0,145,255,0.2);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    font-size: 13px; line-height: 1.7; color: #aac8ff;
+  }
+  .instructions strong { color: var(--white); }
+  .instructions ol { padding-left: 18px; margin-top: 6px; }
+
+  /* Scrollable screen content */
+  .screen-scroll { overflow-y: auto; }
+
+  /* Drive folder list */
+  .folder-list { display: flex; flex-direction: column; gap: 8px; }
+  .folder-item {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .folder-icon { font-size: 22px; flex-shrink: 0; }
+  .folder-name { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700; }
+  .folder-status { font-size: 11px; color: var(--gray); margin-top: 2px; }
+
+  canvas { display: none; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="app-header">
+  <div class="app-logo">
+    <div class="logo-ball">⚽</div>
+    <div>
+      <div class="app-title">Panini Club</div>
+      <div class="app-subtitle">Gestion des vignettes</div>
+    </div>
+  </div>
+  <div class="header-badge" id="headerBadge">Config</div>
+</header>
+
+<!-- NAV -->
+<nav class="nav-tabs">
+  <div class="nav-tab active" onclick="showScreen('setup')" data-screen="setup">
+    <span class="tab-icon">⚙️</span>Config
+  </div>
+  <div class="nav-tab" onclick="showScreen('photo')" data-screen="photo">
+    <span class="tab-icon">📸</span>Photo
+  </div>
+  <div class="nav-tab" onclick="showScreen('gallery')" data-screen="gallery">
+    <span class="tab-icon">🗂️</span>Galerie
+  </div>
+  <div class="nav-tab" onclick="showScreen('drive')" data-screen="drive">
+    <span class="tab-icon">☁️</span>Drive
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- SCREEN 1 : CONFIGURATION                       -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="screen-setup" class="screen active screen-scroll">
+
+  <div class="section-title">⚙️ Configuration</div>
+  <div class="section-sub">Chargez votre fichier Excel et configurez Google Drive</div>
+
+  <!-- Excel Import -->
+  <div class="setup-card">
+    <div class="setup-card-title">
+      <div class="step">1</div>
+      Fichier Excel des joueurs
+    </div>
+    <p style="font-size:13px;color:var(--gray);margin-bottom:14px;line-height:1.6;">
+      Votre fichier doit avoir une feuille par catégorie (ou une colonne Catégorie). Colonnes attendues : <strong>Prénom</strong>, <strong>Nom</strong>, <strong>Catégorie</strong> (optionnel si feuilles séparées).
+    </p>
+    <div class="upload-zone" onclick="document.getElementById('xlsxInput').click()" id="uploadZone">
+      <div class="upload-icon">📊</div>
+      <div class="upload-text">Charger le fichier Excel</div>
+      <div class="upload-hint">Format .xlsx — Glissez ou cliquez ici</div>
+    </div>
+    <input type="file" id="xlsxInput" accept=".xlsx,.xls,.csv">
+    <div id="excelStatus"></div>
+  </div>
+
+  <!-- Google Drive config -->
+  <div class="setup-card">
+    <div class="setup-card-title">
+      <div class="step">2</div>
+      Configuration Google Drive
+    </div>
+    <div class="instructions">
+      <strong>Comment configurer :</strong>
+      <ol>
+        <li>Créez un projet sur <strong>console.cloud.google.com</strong></li>
+        <li>Activez l'API <strong>Google Drive</strong></li>
+        <li>Créez des identifiants <strong>OAuth 2.0</strong> (application web)</li>
+        <li>Ajoutez l'URL de cette page dans les origines autorisées</li>
+        <li>Créez un dossier Drive par catégorie</li>
+        <li>Copiez les IDs des dossiers ci-dessous</li>
+      </ol>
+    </div>
+    <div class="input-group">
+      <label class="input-label">Client ID Google OAuth</label>
+      <input type="text" class="input-field" id="googleClientId" placeholder="xxxx.apps.googleusercontent.com">
+    </div>
+    <div class="input-group">
+      <label class="input-label">Nom du club</label>
+      <input type="text" class="input-field" id="clubName" placeholder="FC Mon Club" value="FC Mon Club">
+    </div>
+    <div id="driveFolderConfig"></div>
+    <button class="btn btn-secondary btn-sm" style="margin-bottom:12px" onclick="addFolderConfig()">+ Ajouter un dossier</button>
+    <button class="btn btn-primary" onclick="saveConfig()">💾 Enregistrer la configuration</button>
+  </div>
+
+  <!-- Stats -->
+  <div id="statsSection" style="display:none">
+    <div class="section-title" style="margin-bottom:14px">📊 Résumé</div>
+    <div class="stats-grid" id="statsGrid"></div>
+  </div>
+
+  <!-- Template Excel download -->
+  <div class="setup-card">
+    <div class="setup-card-title">
+      <div class="step">3</div>
+      Télécharger le template Excel
+    </div>
+    <p style="font-size:13px;color:var(--gray);margin-bottom:14px">Utilisez ce template vierge pour saisir vos joueurs par catégorie.</p>
+    <button class="btn btn-gold" onclick="downloadTemplate()">⬇️ Télécharger le template .xlsx</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- SCREEN 2 : PRISE DE PHOTO                      -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="screen-photo" class="screen screen-scroll">
+
+  <div class="section-title">📸 Prise de photo</div>
+  <div class="section-sub">Sélectionnez un joueur puis prenez la photo</div>
+
+  <!-- Category selector -->
+  <div class="category-selector">
+    <span class="category-label">Catégorie</span>
+    <div class="category-grid" id="categoryGrid"></div>
+  </div>
+
+  <!-- Player search -->
+  <div id="playerSection" style="display:none">
+    <div class="player-search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="player-search" id="playerSearch" placeholder="Rechercher un joueur..." oninput="filterPlayers()">
+    </div>
+    <div class="player-list" id="playerList"></div>
+  </div>
+
+  <!-- Camera -->
+  <div id="cameraSection" style="display:none">
+    <div class="camera-section">
+      <div class="camera-player-header">
+        <div class="camera-player-number" id="camPlayerNum">?</div>
+        <div>
+          <div class="camera-player-name" id="camPlayerName">Joueur sélectionné</div>
+          <div class="camera-player-cat" id="camPlayerCat">Catégorie</div>
+        </div>
+      </div>
+      <div class="preview-wrap">
+        <video id="cameraStream" class="preview-video" autoplay playsinline></video>
+        <img id="photoPreview" class="preview-img" style="display:none" alt="Aperçu photo">
+        <div id="previewPlaceholder" class="preview-placeholder">
+          <div class="ph-icon">📷</div>
+          <div class="ph-text">Activez la caméra ou choisissez une photo</div>
+        </div>
+        <div class="panini-frame"></div>
+        <div class="panini-badge" id="paniniBadge" style="display:none">
+          <div class="panini-badge-name" id="badgeName"></div>
+          <div class="panini-badge-cat" id="badgeCat"></div>
+        </div>
+      </div>
+      <div class="camera-controls">
+        <button class="btn-camera open-cam" onclick="openCamera()">
+          <span class="btn-icon">🎥</span>Caméra
+        </button>
+        <button class="btn-camera take-photo" onclick="takePhoto()" id="btnTakePhoto" disabled>
+          <span class="btn-icon">⭕</span>Capturer
+        </button>
+        <button class="btn-camera from-gallery" onclick="document.getElementById('galleryInput').click()">
+          <span class="btn-icon">🖼️</span>Galerie
+        </button>
+        <button class="btn-camera upload-gdrive" onclick="uploadCurrentPhoto()" id="btnUpload" disabled>
+          <span class="btn-icon">☁️</span>Envoyer
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="galleryInput" accept="image/*" onchange="loadFromGallery(event)">
+  <canvas id="captureCanvas"></canvas>
+
+  <div id="photoNoneState" class="empty-state">
+    <div class="empty-icon">⚽</div>
+    <div class="empty-title">Aucun joueur chargé</div>
+    <div class="empty-text">Chargez d'abord votre fichier Excel<br>dans l'onglet Configuration.</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- SCREEN 3 : GALERIE                             -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="screen-gallery" class="screen screen-scroll">
+
+  <div class="section-title">🗂️ Galerie</div>
+  <div class="section-sub">Photos prises, prêtes à envoyer sur Drive</div>
+
+  <div class="gallery-filters" id="galleryFilters">
+    <div class="filter-chip active" onclick="filterGallery('all',this)">Toutes</div>
+  </div>
+
+  <div id="galleryGrid" class="gallery-grid"></div>
+  <div id="galleryEmpty" class="empty-state" style="display:none">
+    <div class="empty-icon">📷</div>
+    <div class="empty-title">Aucune photo</div>
+    <div class="empty-text">Prenez des photos depuis l'onglet 📸 Photo.</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- SCREEN 4 : GOOGLE DRIVE                        -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="screen-drive" class="screen screen-scroll">
+
+  <div class="section-title">☁️ Google Drive</div>
+  <div class="section-sub">Synchronisation et gestion des uploads</div>
+
+  <!-- Connection -->
+  <div id="driveStatusCard" class="drive-status-card drive-disconnected">
+    <div class="drive-icon-row">
+      <span class="drive-icon-big">🔴</span>
+      <div>
+        <div class="drive-status-label drive-status-bad" id="driveStatusText">Non connecté</div>
+        <div style="font-size:12px;color:var(--gray);margin-top:4px" id="driveStatusSub">Configurez le Client ID puis connectez-vous</div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="connectDrive()" id="btnConnectDrive">🔗 Connexion à Google Drive</button>
+  </div>
+
+  <!-- Progress -->
+  <div id="driveProgress" style="display:none">
+    <div class="setup-card">
+      <div class="section-title" style="font-size:18px;margin-bottom:8px">📤 Progression</div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-label">
+          <span id="progressLabel">0 / 0 photos</span>
+          <span id="progressPct">0%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload all button -->
+  <button class="btn btn-primary" onclick="uploadAllPending()" id="btnUploadAll" style="margin-bottom:16px;display:none">
+    ☁️ Envoyer toutes les photos en attente
+  </button>
+
+  <!-- Folder map -->
+  <div class="setup-card">
+    <div class="setup-card-title">📁 Dossiers Drive par catégorie</div>
+    <div class="folder-list" id="folderList">
+      <div style="color:var(--gray);font-size:13px">Configurez les IDs de dossiers dans l'onglet Configuration.</div>
+    </div>
+  </div>
+
+  <!-- Queue -->
+  <div class="upload-queue" id="uploadQueueCard" style="display:none">
+    <div class="queue-header">
+      <span>File d'attente</span>
+      <span id="queueCount" style="color:var(--gray);font-size:12px"></span>
+    </div>
+    <div id="uploadQueue"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- MODAL LIGHTBOX                                 -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="modalOverlay" class="modal-overlay" style="display:none" onclick="closeModal(event)">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title" id="modalTitle">Photo</div>
+    <img id="modalPhoto" class="modal-photo" alt="">
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary btn-sm" onclick="deletePhotoModal()" style="background:rgba(255,61,87,0.15);color:var(--red);border-color:rgba(255,61,87,0.3)">🗑️ Supprimer</button>
+      <button class="btn btn-primary btn-sm" onclick="uploadPhotoModal()" id="modalUploadBtn">☁️ Envoyer Drive</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- JAVASCRIPT                                     -->
+<!-- ══════════════════════════════════════════════ -->
+<script>
+// ── STATE ────────────────────────────────────────────────────────────────────
+const CATEGORIES = [
+  { id:'U6',   label:'U6',       icon:'👶', color:'#ff6b6b' },
+  { id:'U7',   label:'U7',       icon:'🧒', color:'#ff9f43' },
+  { id:'U8',   label:'U8',       icon:'🧒', color:'#feca57' },
+  { id:'U9',   label:'U9',       icon:'🧒', color:'#48dbfb' },
+  { id:'U10',  label:'U10',      icon:'👦', color:'#1dd1a1' },
+  { id:'U11',  label:'U11',      icon:'👦', color:'#54a0ff' },
+  { id:'U12',  label:'U12',      icon:'👦', color:'#5f27cd' },
+  { id:'U13',  label:'U13',      icon:'👦', color:'#c8d6e5' },
+  { id:'U14',  label:'U14',      icon:'👦', color:'#ff9ff3' },
+  { id:'U15',  label:'U15',      icon:'🧑', color:'#ffeaa7' },
+  { id:'U16',  label:'U16',      icon:'🧑', color:'#dfe6e9' },
+  { id:'U17',  label:'U17',      icon:'🧑', color:'#fdcb6e' },
+  { id:'U18',  label:'U18',      icon:'🧑', color:'#6c5ce7' },
+  { id:'U19',  label:'U19',      icon:'🧑', color:'#00cec9' },
+  { id:'SEN',  label:'Seniors',  icon:'🏃', color:'#00b894' },
+  { id:'VET',  label:'Vétérans', icon:'🦾', color:'#a29bfe' },
+  { id:'FEM',  label:'Féminines',icon:'👩', color:'#fd79a8' },
+  { id:'DIR',  label:'Dirigeants',icon:'👔', color:'#0984e3' },
+  { id:'BEN',  label:'Bénévoles',icon:'🙌', color:'#e17055' },
+];
+
+let state = {
+  players: {},        // { catId: [{prenom, nom, id}] }
+  photos: {},         // { playerId: {dataUrl, playerId, catId, playerName, status:'local'|'uploading'|'done'|'error'} }
+  config: {
+    clientId: '',
+    clubName: 'FC Mon Club',
+    driveFolders: {},   // { catId: folderId }
+  },
+  selectedCat: null,
+  selectedPlayer: null,
+  stream: null,
+  driveToken: null,
+  modalPlayerId: null,
+  galleryFilter: 'all',
+};
+
+// ── PERSISTENCE ──────────────────────────────────────────────────────────────
+function saveState() {
+  try {
+    const toSave = { players: state.players, config: state.config };
+    localStorage.setItem('paniniClub_state', JSON.stringify(toSave));
+    // Photos separately (can be large)
+    localStorage.setItem('paniniClub_photos', JSON.stringify(state.photos));
+  } catch(e) { console.warn('Storage full:', e); }
+}
+function loadState() {
+  try {
+    const s = localStorage.getItem('paniniClub_state');
+    if (s) { const d = JSON.parse(s); state.players = d.players||{}; state.config = {...state.config,...d.config}; }
+    const p = localStorage.getItem('paniniClub_photos');
+    if (p) state.photos = JSON.parse(p);
+  } catch(e) {}
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  document.querySelector(`[data-screen="${id}"]`).classList.add('active');
+
+  if (id==='photo') renderPhotoScreen();
+  if (id==='gallery') renderGallery();
+  if (id==='drive') renderDriveScreen();
+  if (id==='setup') renderStats();
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+function toast(msg, type='success') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast' + (type==='error'?' error':'');
+  t.innerHTML = (type==='error'?'❌':'✅') + ' <span>'+msg+'</span>';
+  c.appendChild(t);
+  setTimeout(()=>t.remove(), 3000);
+}
+
+// ── EXCEL LOADING ─────────────────────────────────────────────────────────────
+document.getElementById('xlsxInput').addEventListener('change', function(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const wb = XLSX.read(ev.target.result, {type:'binary'});
+      state.players = {};
+
+      // Try multi-sheet approach first
+      wb.SheetNames.forEach(sheetName => {
+        const ws = wb.Sheets[sheetName];
+        const rows = XLSX.utils.sheet_to_json(ws, {defval:''});
+        if (!rows.length) return;
+
+        // Find category from sheet name or first row
+        let catId = matchCategory(sheetName);
+        rows.forEach((row, i) => {
+          const prenom = (row['Prénom']||row['prenom']||row['PRENOM']||row['Firstname']||'').toString().trim();
+          const nom = (row['Nom']||row['nom']||row['NOM']||row['Lastname']||row['Name']||'').toString().trim();
+          const rowCat = (row['Catégorie']||row['categorie']||row['CATEGORIE']||row['Category']||sheetName||'').toString().trim();
+
+          if (!prenom && !nom) return;
+          const cId = matchCategory(rowCat) || catId || 'SEN';
+          if (!state.players[cId]) state.players[cId] = [];
+          state.players[cId].push({ id: cId+'_'+Date.now()+'_'+i, prenom, nom, num: state.players[cId].length+1 });
+        });
+      });
+
+      const total = Object.values(state.players).reduce((a,b)=>a+b.length,0);
+      document.getElementById('excelStatus').innerHTML = `<div class="alert alert-success"><span class="alert-icon">✅</span> ${total} joueurs chargés dans ${Object.keys(state.players).length} catégorie(s)</div>`;
+      saveState();
+      renderStats();
+      updateHeaderBadge();
+      toast(`${total} joueurs importés !`);
+    } catch(err) {
+      document.getElementById('excelStatus').innerHTML = `<div class="alert alert-error"><span class="alert-icon">❌</span> Erreur de lecture : ${err.message}</div>`;
+    }
+  };
+  reader.readAsBinaryString(file);
+});
+
+function matchCategory(str) {
+  if (!str) return null;
+  const s = str.toString().toUpperCase().trim();
+  const found = CATEGORIES.find(c => {
+    return s === c.id || s.startsWith(c.id) || s.includes(c.label.toUpperCase()) ||
+           (c.id==='DIR' && (s.includes('DIRIG') || s.includes('MANAGE'))) ||
+           (c.id==='BEN' && (s.includes('BÉNÉV') || s.includes('BENEV') || s.includes('VOLUNT'))) ||
+           (c.id==='VET' && (s.includes('VÉT') || s.includes('VET') || s.includes('MASTER'))) ||
+           (c.id==='SEN' && (s.includes('SENIOR') || s.includes('ADULT')));
+  });
+  return found ? found.id : null;
+}
+
+// ── TEMPLATE DOWNLOAD ─────────────────────────────────────────────────────────
+function downloadTemplate() {
+  const wb = XLSX.utils.book_new();
+  CATEGORIES.forEach(cat => {
+    const rows = [['Prénom','Nom','Catégorie']];
+    // Add 3 example rows
+    rows.push(['Exemple','Joueur', cat.label]);
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{wch:20},{wch:25},{wch:15}];
+    XLSX.utils.book_append_sheet(wb, ws, cat.label);
+  });
+  XLSX.writeFile(wb, 'template_joueurs_panini.xlsx');
+  toast('Template téléchargé !');
+}
+
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+let folderConfigCount = 0;
+function addFolderConfig(catId='', folderId='') {
+  folderConfigCount++;
+  const wrap = document.getElementById('driveFolderConfig');
+  const div = document.createElement('div');
+  div.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;align-items:center';
+  div.innerHTML = `
+    <select style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:10px;color:#f0f4ff;font-size:13px">
+      ${CATEGORIES.map(c=>`<option value="${c.id}" ${catId===c.id?'selected':''}>${c.icon} ${c.label}</option>`).join('')}
+    </select>
+    <input type="text" placeholder="ID dossier Drive" value="${folderId}"
+      style="flex:2;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:10px;color:#f0f4ff;font-size:12px">
+    <button onclick="this.parentElement.remove()" style="background:rgba(255,61,87,0.2);border:none;color:#ff8fa0;border-radius:8px;padding:10px;cursor:pointer;font-size:16px">✕</button>`;
+  wrap.appendChild(div);
+}
+
+function saveConfig() {
+  state.config.clientId = document.getElementById('googleClientId').value.trim();
+  state.config.clubName = document.getElementById('clubName').value.trim() || 'FC Mon Club';
+  state.config.driveFolders = {};
+  document.querySelectorAll('#driveFolderConfig > div').forEach(div => {
+    const sel = div.querySelector('select');
+    const inp = div.querySelector('input');
+    if (sel && inp && inp.value.trim()) {
+      state.config.driveFolders[sel.value] = inp.value.trim();
+    }
+  });
+  saveState();
+  updateHeaderBadge();
+  renderDriveScreen();
+  toast('Configuration sauvegardée !');
+}
+
+function populateConfigForm() {
+  if (state.config.clientId) document.getElementById('googleClientId').value = state.config.clientId;
+  if (state.config.clubName) document.getElementById('clubName').value = state.config.clubName;
+  const wrap = document.getElementById('driveFolderConfig');
+  wrap.innerHTML = '';
+  Object.entries(state.config.driveFolders).forEach(([cat, fid]) => addFolderConfig(cat, fid));
+}
+
+function updateHeaderBadge() {
+  const total = Object.values(state.players).reduce((a,b)=>a+b.length,0);
+  const badge = document.getElementById('headerBadge');
+  if (total > 0) { badge.textContent = total+' joueurs'; badge.style.background='var(--green)'; }
+  else { badge.textContent='Config'; badge.style.background=''; }
+}
+
+function renderStats() {
+  const total = Object.values(state.players).reduce((a,b)=>a+b.length,0);
+  const photoCount = Object.keys(state.photos).length;
+  const cats = Object.keys(state.players).length;
+  const sec = document.getElementById('statsSection');
+  const grid = document.getElementById('statsGrid');
+  if (total===0) { sec.style.display='none'; return; }
+  sec.style.display='block';
+  grid.innerHTML = `
+    <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">Joueurs</div></div>
+    <div class="stat-card"><div class="stat-num">${photoCount}</div><div class="stat-label">Photos</div></div>
+    <div class="stat-card"><div class="stat-num">${cats}</div><div class="stat-label">Catégories</div></div>`;
+}
+
+// ── PHOTO SCREEN ──────────────────────────────────────────────────────────────
+function renderPhotoScreen() {
+  const total = Object.values(state.players).reduce((a,b)=>a+b.length,0);
+  document.getElementById('photoNoneState').style.display = total===0 ? 'block':'none';
+  if (total===0) return;
+
+  const grid = document.getElementById('categoryGrid');
+  grid.innerHTML = '';
+  CATEGORIES.forEach(cat => {
+    const players = state.players[cat.id] || [];
+    if (!players.length) return;
+    const photos = players.filter(p=>state.photos[p.id]).length;
+    const div = document.createElement('div');
+    div.className = 'cat-btn' + (state.selectedCat===cat.id?' selected':'');
+    div.innerHTML = `<span class="cat-icon">${cat.icon}</span><span class="cat-name">${cat.label}</span><span class="cat-count">${photos}/${players.length} 📸</span>`;
+    div.onclick = () => selectCategory(cat.id);
+    grid.appendChild(div);
+  });
+
+  if (state.selectedCat) selectCategory(state.selectedCat, false);
+}
+
+function selectCategory(catId, scroll=true) {
+  state.selectedCat = catId;
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('selected'));
+  const btns = [...document.querySelectorAll('.cat-btn')];
+  const catDef = CATEGORIES.find(c=>c.id===catId);
+  btns.forEach(b=>{ if(b.querySelector('.cat-name')?.textContent === (catDef?.label||catId)) b.classList.add('selected'); });
+
+  document.getElementById('playerSection').style.display = 'block';
+  document.getElementById('playerSearch').value = '';
+  filterPlayers();
+  if (scroll) document.getElementById('playerSection').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function filterPlayers() {
+  const query = document.getElementById('playerSearch').value.toLowerCase();
+  const players = (state.players[state.selectedCat]||[]);
+  const list = document.getElementById('playerList');
+  list.innerHTML = '';
+
+  const filtered = players.filter(p =>
+    (p.prenom+' '+p.nom).toLowerCase().includes(query)
+  );
+
+  if (!filtered.length) {
+    list.innerHTML = '<div style="color:var(--gray);font-size:13px;text-align:center;padding:20px">Aucun joueur trouvé</div>';
+    return;
+  }
+
+  filtered.forEach(p => {
+    const hasPhoto = !!state.photos[p.id];
+    const initials = (p.prenom[0]||'')+(p.nom[0]||'');
+    const div = document.createElement('div');
+    div.className = 'player-item' + (state.selectedPlayer?.id===p.id?' selected':'');
+    div.innerHTML = `
+      <div class="player-avatar">${initials.toUpperCase()}</div>
+      <div class="player-info">
+        <div class="player-name">${p.prenom} ${p.nom.toUpperCase()}</div>
+        <div class="player-cat-badge">${state.selectedCat}</div>
+      </div>
+      <span class="player-photo-status ${hasPhoto?'status-ok':'status-missing'}">${hasPhoto?'✓ Photo':'Sans photo'}</span>`;
+    div.onclick = () => selectPlayer(p);
+    list.appendChild(div);
+  });
+}
+
+function selectPlayer(player) {
+  state.selectedPlayer = player;
+  // Update list UI
+  document.querySelectorAll('.player-item').forEach(i=>i.classList.remove('selected'));
+  filterPlayers(); // re-render to show selection
+
+  // Show camera section
+  const catDef = CATEGORIES.find(c=>c.id===state.selectedCat);
+  document.getElementById('cameraSection').style.display = 'block';
+  document.getElementById('camPlayerNum').textContent = player.num || '#';
+  document.getElementById('camPlayerName').textContent = player.prenom + ' ' + player.nom.toUpperCase();
+  document.getElementById('camPlayerCat').textContent = catDef?.label || state.selectedCat;
+
+  // Update badge
+  document.getElementById('badgeName').textContent = player.prenom + ' ' + player.nom.toUpperCase();
+  document.getElementById('badgeCat').textContent = catDef?.label || state.selectedCat;
+
+  // Load existing photo if any
+  if (state.photos[player.id]) {
+    showPreviewPhoto(state.photos[player.id].dataUrl);
+  } else {
+    document.getElementById('photoPreview').style.display = 'none';
+    document.getElementById('previewPlaceholder').style.display = 'flex';
+    document.getElementById('paniniBadge').style.display = 'none';
+    document.getElementById('btnUpload').disabled = true;
+  }
+
+  document.getElementById('cameraSection').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+// ── CAMERA ────────────────────────────────────────────────────────────────────
+async function openCamera() {
+  try {
+    if (state.stream) { state.stream.getTracks().forEach(t=>t.stop()); }
+    state.stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal:1280 }, height: { ideal:960 } }
+    });
+    const video = document.getElementById('cameraStream');
+    video.srcObject = state.stream;
+    video.style.display = 'block';
+    document.getElementById('photoPreview').style.display = 'none';
+    document.getElementById('previewPlaceholder').style.display = 'none';
+    document.getElementById('btnTakePhoto').disabled = false;
+    toast('Caméra activée');
+  } catch(e) {
+    toast('Impossible d\'accéder à la caméra : '+e.message, 'error');
+  }
+}
+
+function takePhoto() {
+  const video = document.getElementById('cameraStream');
+  const canvas = document.getElementById('captureCanvas');
+  canvas.width = video.videoWidth || 640;
+  canvas.height = video.videoHeight || 480;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+
+  if (state.stream) { state.stream.getTracks().forEach(t=>t.stop()); state.stream=null; }
+  video.style.display='none';
+
+  savePhoto(dataUrl);
+}
+
+function loadFromGallery(e) {
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => savePhoto(ev.target.result);
+  reader.readAsDataURL(file);
+}
+
+function savePhoto(dataUrl) {
+  if (!state.selectedPlayer) { toast('Sélectionnez un joueur d\'abord', 'error'); return; }
+  const p = state.selectedPlayer;
+  state.photos[p.id] = {
+    dataUrl, playerId: p.id, catId: state.selectedCat,
+    playerName: p.prenom+' '+p.nom,
+    status: 'local',
+    filename: `${state.selectedCat}_${p.nom.replace(/\s/g,'_')}_${p.prenom.replace(/\s/g,'_')}.jpg`,
+    timestamp: Date.now(),
+  };
+  saveState();
+  showPreviewPhoto(dataUrl);
+  document.getElementById('btnUpload').disabled = false;
+  toast('Photo sauvegardée !');
+  renderStats();
+  filterPlayers();
+}
+
+function showPreviewPhoto(dataUrl) {
+  document.getElementById('previewPlaceholder').style.display = 'none';
+  const img = document.getElementById('photoPreview');
+  img.src = dataUrl; img.style.display='block';
+  document.getElementById('paniniBadge').style.display='block';
+  document.getElementById('btnTakePhoto').disabled = true;
+}
+
+async function uploadCurrentPhoto() {
+  if (!state.selectedPlayer || !state.photos[state.selectedPlayer.id]) return;
+  if (!state.driveToken) { toast('Connectez-vous à Google Drive d\'abord', 'error'); showScreen('drive'); return; }
+  await uploadPhoto(state.selectedPlayer.id);
+}
+
+// ── GALLERY ───────────────────────────────────────────────────────────────────
+function renderGallery() {
+  const filtersEl = document.getElementById('galleryFilters');
+  // Rebuild filters
+  const usedCats = [...new Set(Object.values(state.photos).map(p=>p.catId))];
+  filtersEl.innerHTML = '<div class="filter-chip active" onclick="filterGallery(\'all\',this)">Toutes</div>';
+  usedCats.forEach(cId => {
+    const cat = CATEGORIES.find(c=>c.id===cId);
+    const chip = document.createElement('div');
+    chip.className = 'filter-chip';
+    chip.textContent = (cat?.icon||'')+ ' '+(cat?.label||cId);
+    chip.onclick = function(){ filterGallery(cId, this); };
+    filtersEl.appendChild(chip);
+  });
+
+  renderGalleryGrid(state.galleryFilter);
+}
+
+function filterGallery(filter, el) {
+  state.galleryFilter = filter;
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderGalleryGrid(filter);
+}
+
+function renderGalleryGrid(filter) {
+  const grid = document.getElementById('galleryGrid');
+  const empty = document.getElementById('galleryEmpty');
+  let photos = Object.values(state.photos);
+  if (filter !== 'all') photos = photos.filter(p=>p.catId===filter);
+
+  grid.innerHTML = '';
+  if (!photos.length) { empty.style.display='block'; return; }
+  empty.style.display='none';
+
+  photos.sort((a,b)=>b.timestamp-a.timestamp).forEach(photo => {
+    const div = document.createElement('div');
+    div.className = 'gallery-card';
+    div.innerHTML = `
+      <img src="${photo.dataUrl}" alt="${photo.playerName}" loading="lazy">
+      <div class="gallery-card-overlay">
+        <div class="gallery-card-name">${photo.playerName}</div>
+        <div class="gallery-card-cat">${photo.catId} · ${photo.status==='done'?'✓ Drive':'📱 Local'}</div>
+      </div>`;
+    div.onclick = () => openModal(photo.playerId);
+    grid.appendChild(div);
+  });
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────────────────
+function openModal(playerId) {
+  state.modalPlayerId = playerId;
+  const photo = state.photos[playerId]; if(!photo) return;
+  document.getElementById('modalTitle').textContent = photo.playerName;
+  document.getElementById('modalPhoto').src = photo.dataUrl;
+  document.getElementById('modalUploadBtn').disabled = photo.status==='done';
+  document.getElementById('modalUploadBtn').textContent = photo.status==='done'?'✓ Envoyé':'☁️ Envoyer Drive';
+  document.getElementById('modalOverlay').style.display='flex';
+}
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modalOverlay') && !e.currentTarget.classList?.contains('modal-close')) return;
+  document.getElementById('modalOverlay').style.display='none';
+}
+function deletePhotoModal() {
+  if (!state.modalPlayerId) return;
+  delete state.photos[state.modalPlayerId];
+  saveState();
+  document.getElementById('modalOverlay').style.display='none';
+  renderGallery();
+  renderStats();
+  toast('Photo supprimée');
+}
+async function uploadPhotoModal() {
+  if (!state.modalPlayerId) return;
+  if (!state.driveToken) { toast('Connectez-vous à Google Drive d\'abord', 'error'); showScreen('drive'); return; }
+  await uploadPhoto(state.modalPlayerId);
+  document.getElementById('modalOverlay').style.display='none';
+}
+
+// ── GOOGLE DRIVE ──────────────────────────────────────────────────────────────
+function connectDrive() {
+  if (!state.config.clientId) { toast('Renseignez d\'abord le Client ID dans Configuration', 'error'); showScreen('setup'); return; }
+  const params = new URLSearchParams({
+    client_id: state.config.clientId,
+    redirect_uri: window.location.origin + window.location.pathname,
+    response_type: 'token',
+    scope: 'https://www.googleapis.com/auth/drive.file',
+    include_granted_scopes: 'true',
+    state: 'drive_auth',
+  });
+  window.location.href = 'https://accounts.google.com/o/oauth2/v2/auth?'+params;
+}
+
+function checkDriveCallback() {
+  const hash = window.location.hash.substring(1);
+  if (!hash) return;
+  const params = new URLSearchParams(hash);
+  const token = params.get('access_token');
+  if (token) {
+    state.driveToken = token;
+    window.history.replaceState(null, '', window.location.pathname);
+    toast('✅ Connecté à Google Drive !');
+    renderDriveScreen();
+  }
+}
+
+function renderDriveScreen() {
+  const card = document.getElementById('driveStatusCard');
+  const text = document.getElementById('driveStatusText');
+  const sub = document.getElementById('driveStatusSub');
+  const btn = document.getElementById('btnConnectDrive');
+
+  if (state.driveToken) {
+    card.className='drive-status-card drive-connected';
+    card.querySelector('.drive-icon-big').textContent='🟢';
+    text.textContent='Connecté à Google Drive'; text.className='drive-status-label drive-status-ok';
+    sub.textContent='Prêt à envoyer des photos';
+    btn.textContent='🔄 Reconnecter'; btn.className='btn btn-secondary';
+  } else {
+    card.className='drive-status-card drive-disconnected';
+    card.querySelector('.drive-icon-big').textContent='🔴';
+    text.textContent='Non connecté'; text.className='drive-status-label drive-status-bad';
+    sub.textContent='Configurez le Client ID puis connectez-vous';
+    btn.textContent='🔗 Connexion à Google Drive'; btn.className='btn btn-primary';
+  }
+
+  // Folder list
+  const folderList = document.getElementById('folderList');
+  const folders = state.config.driveFolders;
+  if (!Object.keys(folders).length) {
+    folderList.innerHTML = '<div style="color:var(--gray);font-size:13px">Aucun dossier configuré.</div>';
+  } else {
+    folderList.innerHTML = '';
+    CATEGORIES.forEach(cat => {
+      const fid = folders[cat.id];
+      if (!fid) return;
+      const photoCount = Object.values(state.photos).filter(p=>p.catId===cat.id).length;
+      const uploadedCount = Object.values(state.photos).filter(p=>p.catId===cat.id&&p.status==='done').length;
+      const div = document.createElement('div');
+      div.className='folder-item';
+      div.innerHTML = `
+        <span class="folder-icon">${cat.icon}</span>
+        <div style="flex:1">
+          <div class="folder-name">${cat.label}</div>
+          <div class="folder-status">ID: ${fid.substring(0,20)}... · ${uploadedCount}/${photoCount} envoyées</div>
+        </div>
+        <a href="https://drive.google.com/drive/folders/${fid}" target="_blank" style="color:var(--green);font-size:12px;text-decoration:none">🔗 Ouvrir</a>`;
+      folderList.appendChild(div);
+    });
+  }
+
+  // Queue
+  const pending = Object.values(state.photos).filter(p=>p.status==='local');
+  const btnUpAll = document.getElementById('btnUploadAll');
+  btnUpAll.style.display = (state.driveToken && pending.length > 0) ? 'block':'none';
+
+  const qCard = document.getElementById('uploadQueueCard');
+  const qEl = document.getElementById('uploadQueue');
+  const queue = Object.values(state.photos);
+  if (queue.length) {
+    qCard.style.display='block';
+    document.getElementById('queueCount').textContent = queue.length+' photos';
+    qEl.innerHTML = '';
+    queue.sort((a,b)=>b.timestamp-a.timestamp).forEach(ph => {
+      const div = document.createElement('div');
+      div.className='queue-item';
+      const statusClass = {local:'q-pending',uploading:'q-uploading',done:'q-done',error:'q-error'}[ph.status]||'q-pending';
+      const statusLabel = {local:'En attente',uploading:'⏳ Upload...',done:'✓ Envoyé',error:'⚠ Erreur'}[ph.status]||'?';
+      div.innerHTML = `
+        <img src="${ph.dataUrl}" class="queue-thumb" alt="">
+        <div class="queue-info">
+          <div class="queue-name">${ph.playerName}</div>
+          <div class="queue-cat">${ph.catId} · ${ph.filename||''}</div>
+        </div>
+        <span class="queue-badge ${statusClass}">${statusLabel}</span>`;
+      qEl.appendChild(div);
+    });
+  } else { qCard.style.display='none'; }
+}
+
+async function uploadAllPending() {
+  const pending = Object.keys(state.photos).filter(id=>state.photos[id].status==='local');
+  if (!pending.length) { toast('Aucune photo en attente'); return; }
+
+  const progressWrap = document.getElementById('driveProgress');
+  progressWrap.style.display='block';
+  let done=0;
+
+  for (const pid of pending) {
+    await uploadPhoto(pid, true);
+    done++;
+    const pct = Math.round(done/pending.length*100);
+    document.getElementById('progressLabel').textContent=`${done} / ${pending.length} photos`;
+    document.getElementById('progressPct').textContent=pct+'%';
+    document.getElementById('progressFill').style.width=pct+'%';
+  }
+  toast(`${done} photos envoyées sur Drive !`);
+  renderDriveScreen();
+}
+
+async function uploadPhoto(playerId, silent=false) {
+  const photo = state.photos[playerId]; if(!photo) return;
+  const folderId = state.config.driveFolders[photo.catId];
+  if (!folderId) {
+    if(!silent) toast('Pas de dossier Drive configuré pour '+photo.catId,'error');
+    return;
+  }
+  if (!state.driveToken) {
+    if(!silent) toast('Non connecté à Drive','error');
+    return;
+  }
+
+  photo.status='uploading';
+  saveState();
+  renderDriveScreen();
+
+  try {
+    // Convert dataUrl to blob
+    const res = await fetch(photo.dataUrl);
+    const blob = await res.blob();
+
+    const metadata = JSON.stringify({ name: photo.filename, parents: [folderId] });
+    const formData = new FormData();
+    formData.append('metadata', new Blob([metadata], {type:'application/json'}));
+    formData.append('file', blob, photo.filename);
+
+    const uploadRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer '+state.driveToken },
+      body: formData,
+    });
+
+    if (uploadRes.ok) {
+      photo.status='done';
+      if(!silent) toast('Photo envoyée : '+photo.playerName);
+    } else {
+      const err = await uploadRes.json();
+      throw new Error(err.error?.message||'Erreur Drive');
+    }
+  } catch(e) {
+    photo.status='error';
+    if(!silent) toast('Erreur upload : '+e.message,'error');
+  }
+  saveState();
+  renderDriveScreen();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+(function init() {
+  loadState();
+  checkDriveCallback();
+  populateConfigForm();
+  updateHeaderBadge();
+  renderStats();
+  renderPhotoScreen();
+
+  // Upload zone drag
+  const zone = document.getElementById('uploadZone');
+  zone.addEventListener('dragover', e=>{ e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', ()=>zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e=>{ e.preventDefault(); zone.classList.remove('drag-over'); document.getElementById('xlsxInput').files=e.dataTransfer.files; document.getElementById('xlsxInput').dispatchEvent(new Event('change')); });
+})();
+</script>
+</body>
+</html>
