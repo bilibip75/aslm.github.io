@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Composition ASLM</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.modal[hidden] {
+    display: none;
+}
+
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.55);
+}
+
+.modal-content {
+    position: relative;
+    width: min(100%, 480px);
+    padding: 24px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+}
+
+.modal-close {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    width: auto;
+    padding: 2px 8px;
+    background: transparent;
+    color: #333;
+    font-size: 28px;
+}
+
+.modal-content select,
+.modal-content input {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 6px 0 14px;
+    padding: 10px;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #003366 0%, #0066cc 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.container {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    padding: 40px;
+    max-width: 800px;
+    width: 100%;
+}
+
+.logo {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.logo img {
+    width: 150px;
+    height: auto;
+}
+
+h1 {
+    color: #003366;
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 24px;
+}
+
+h2 {
+    color: #003366;
+    font-size: 16px;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #0066cc;
+    padding-bottom: 10px;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+label {
+    display: block;
+    color: #333;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+input[type="number"] {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+input[type="number"]:focus {
+    outline: none;
+    border-color: #0066cc;
+}
+
+/* Section 1: Sélectionner les catégories */
+.categories-select {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    padding: 15px;
+    background: #f9f9f9;
+    border-radius: 5px;
+    border: 2px solid #ddd;
+}
+
+.categorie-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid #ddd;
+}
+
+.categorie-checkbox:hover {
+    background: #e8f0ff;
+    border-color: #0066cc;
+}
+
+.categorie-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.categorie-checkbox label {
+    margin-bottom: 0;
+    cursor: pointer;
+    font-weight: normal;
+}
+
+/* Section 2: Sélectionner les joueurs */
+.joueurs-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 15px;
+    background: #f9f9f9;
+    border-radius: 5px;
+    border: 2px solid #ddd;
+}
+
+.categorie-section {
+    background: white;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    padding: 15px;
+    transition: all 0.3s;
+    display: none;
+}
+
+.categorie-section.active {
+    display: block;
+}
+
+.categorie-section:hover {
+    border-color: #0066cc;
+    box-shadow: 0 2px 8px rgba(0,51,102,0.1);
+}
+
+.categorie-title {
+    background: linear-gradient(135deg, #003366 0%, #0066cc 100%);
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 12px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.joueur-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    margin-bottom: 8px;
+    background: #f9f9f9;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.joueur-item:hover {
+    background: #e8f0ff;
+    border-left: 4px solid #0066cc;
+}
+
+.joueur-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.joueur-item label {
+    margin-bottom: 0;
+    cursor: pointer;
+    flex: 1;
+    font-size: 14px;
+    font-weight: normal;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.checkbox-group label {
+    margin-bottom: 0;
+    cursor: pointer;
+}
+
+#champNumero {
+    display: none;
+    padding: 15px;
+    background: #f9f9f9;
+    border-left: 4px solid #0066cc;
+    border-radius: 5px;
+}
+
+#champNumero.visible {
+    display: block;
+}
+
+.numeros-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.numero-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.numero-field label {
+    font-size: 13px;
+    margin-bottom: 0;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #003366 0%, #0066cc 100%);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,51,102,0.3);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+.success-message {
+    display: none;
+    background: #d4edda;
+    color: #155724;
+    padding: 15px;
+    border-radius: 5px;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.success-message.show {
+    display: block;
+}
+
+.error-message {
+    display: none;
+    background: #f8d7da;
+    color: #721c24;
+    padding: 15px;
+    border-radius: 5px;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.error-message.show {
+    display: block;
+}
+
+.info-selection {
+    background: #e8f0ff;
+    padding: 10px;
+    border-radius: 5px;
+    color: #003366;
+    font-size: 14px;
+    margin-top: 10px;
+}
+
+.message-vide {
+    text-align: center;
+    color: #666;
+    padding: 20px;
+    font-style: italic;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <div class="logo">
+        <img src="logo.png" alt="Logo ASLM">
+    </div>
+
+    <h1>Composition d'équipe ASLM</h1>
+
+    <form id="formulaire">
+        <!-- Étape 1: Sélectionner les catégories -->
+        <div class="form-group">
+            <h2>📋 Étape 1 : Sélectionner les catégories</h2>
+            <div class="categories-select" id="categoriesSelect"></div>
+            <button type="button" class="button" id="btnMiseAJourJoueurs">
+                🔄 Mettre à jour la liste des joueurs
+            </button>
+            <button type="button" class="button" id="btnAjouterJoueur">
+                ➕ Ajouter un joueur
+            </button>
+            <div id="miseAJourMessage" class="message-vide" aria-live="polite"></div>
+        </div>
+
+        <div id="ajoutJoueurModal" class="modal" hidden>
+            <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="ajoutJoueurTitre">
+                <button type="button" class="modal-close" id="btnFermerAjoutJoueur" aria-label="Fermer">×</button>
+                <h2 id="ajoutJoueurTitre">Ajouter un joueur</h2>
+                <label for="nouveauNom">Nom</label>
+                <input type="text" id="nouveauNom" maxlength="60" required>
+                <label for="nouveauPrenom">Prénom</label>
+                <input type="text" id="nouveauPrenom" maxlength="60" required>
+                <label for="nouvelleCategorie">Catégorie</label>
+                <select id="nouvelleCategorie" required></select>
+                <button type="button" class="button" id="btnValiderAjoutJoueur">Ajouter le joueur</button>
+                <div id="ajoutJoueurMessage" class="message-vide" aria-live="polite"></div>
+            </div>
+        </div>
+
+        <!-- Étape 2: Sélectionner les joueurs -->
+        <div class="form-group">
+            <h2>👥 Étape 2 : Sélectionner les joueurs</h2>
+            <div class="joueurs-container" id="joueursContainer">
+                <div class="message-vide">Sélectionnez d'abord une ou plusieurs catégories ci-dessus</div>
+            </div>
+            <div class="info-selection">
+                Joueurs sélectionnés: <strong id="countJoueurs">0</strong>
+            </div>
+        </div>
+
+        <!-- Étape 3: Attribuer les numéros -->
+        <div class="form-group">
+            <h2>🔢 Étape 3 : Attribuer les numéros (optionnel)</h2>
+            <div class="checkbox-group">
+                <input type="checkbox" id="checkNumeroJoueur">
+                <label for="checkNumeroJoueur">Attribuer des numéros aux joueurs</label>
+            </div>
+        </div>
+
+        <!-- Champ numéros (caché par défaut) -->
+        <div id="champNumero">
+            <div class="form-group">
+                <label>Numéros des joueurs:</label>
+                <div class="numeros-grid" id="numerosContainer"></div>
+            </div>
+        </div>
+
+        <button type="submit">Envoyer la composition</button>
+    </form>
+
+    <div class="success-message" id="successMessage">
+        ✓ Composition enregistrée et email envoyé avec succès !
+    </div>
+
+    <div class="error-message" id="errorMessage">
+        ✗ Une erreur est survenue
+    </div>
+</div>
+
+<script>
+// Base de données des joueurs par catégorie
+let joueursParCategorie = {
+    'U13': [
+        'BAE Axel',
+        'DECLE Valentin',
+        'GALLAIS Liam',
+        'GEORGEL Baptiste',
+        'HANZO Joey',
+        'LAMARI Enzo',
+        'LAMPRECHT Leo'
+    ],
+    'U14': [
+        'BERTRAND Zack',
+        'BOLARDI Ilan',
+        'CHERY Tom',
+        'ESMILAIRE JOLY Enzo',
+        'GUERRE Guillaume',
+        'HURAUX Ethan',
+        'MARCHAND Gabin',
+        'MONGIN Leo',
+        'PERUSSI Enzo',
+        'SANCIER Ilyes'
+    ],
+    'U15': [
+        'BASSINOT Mao',
+        'DAINCHE Arthur',
+        'FRANCOIS Bastien',
+        'GEORGEL Gabriel',
+        'GRAY Even',
+        'HISIGER Emilien',
+        'HUMBERT Yanis',
+        'LANIEL Raphael',
+        'MESSAGER Mathis',
+        'MONTAG Hugo',
+        'THOUVENIN Arthur'
+    ],
+    'U16': [
+        'COLIN Tom',
+        'HANZO Stan',
+        'HENRY Louison',
+        'HIENNE Corentin'
+    ],
+    'U17': [
+        'COSTALONGA Tomy',
+        'DECLE Gregoire',
+        'GRAY Natteo',
+        'MALGRAS Pierre',
+        'NEIGE Baptiste',
+        'PERUSSI Mateo',
+        'PETITJEAN Maxime'
+    ],
+    'U18': [
+        'THOUVENIN Jules',
+        'VAUTRIN Timeo'
+    ],
+    'U19': [
+        'CLIGNY Lukas',
+        'COLIN Emile',
+        'NEIGE Thomas'
+    ],
+    'Seniors': [
+        'NOEL Alban',
+        'NOEL Lilian',
+        'BARDOT Quentin',
+        'BUZZI Bastien',
+        'CHERRIERE Valentin',
+        'COLIN Tanguy',
+        'DELUBIN Jean Francois',
+        'DEPINOY Nathan',
+        'DUHAUT Renilde',
+        'ERNEWEIN Lucas',
+        'GAILLOT Kevin',
+        'GRANDJEAN DEVOISE Noa',
+        'HERISSET Emilien',
+        'JACQUEMIN Francelin',
+        'LEBACQ Hiva',
+        'LEBACQ Kevin',
+        'MATHIS Arnaud',
+        'MELLE Thomas',
+        'MOSBACH Guillaume',
+        'RIEDEL Logan',
+        'RUPPEL Corentin',
+        'TURKMEN Dylan',
+        'WAGNER Baptiste',
+        'ZIMA Pierre'
+    ],
+    'Veterans': [
+        'BARDIN Sebastien',
+        'BASSINOT Lucien',
+        'BLASER Maxime',
+        'BRULHARD Davy',
+        'CARRIERE Yohann',
+        'COLIN Geoffrey',
+        'COLIN Mathieu',
+        'DIDIER Kevin',
+        'DUHAUT Jonathan',
+        'FARGERE Mathias',
+        'FRITSCH Romain',
+        'GALLI Vincent',
+        'GARNIER Aurelien',
+        'GERGONE Vivien',
+        'GRAY Anthony',
+        'GUERRE Fabrice',
+        'GUERRE Romain',
+        'HUSSON Yannick',
+        'JOLY Xavier',
+        'LAMBERT Nicolas',
+        'LAMPRECHT Florent',
+        'LOAEC Adrien',
+        'MORIN Fabien',
+        'RUPPEL Lionel',
+        'VOINSON Adrien'
+    ]
+};
+
+// URL du Google Apps Script déployé
+const scriptURL = 'https://script.google.com/macros/s/AKfycbxiu-zIspP-nRvYTSo5wp7dQ6Lthjxyck7nHKC839jC7X_p4ElaeZb8XAa7F2SZLFCz/exec';
+
+// Initialiser les catégories à cocher
+function initializeCategories() {
+    const container = document.getElementById('categoriesSelect');
+    container.innerHTML = '';
+    
+    Object.keys(joueursParCategorie).forEach((categorie) => {
+        const div = document.createElement('div');
+        div.className = 'categorie-checkbox';
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = `cat_${categorie}`;
+        checkbox.value = categorie;
+        checkbox.addEventListener('change', updateJoueursDisplay);
+        
+        const label = document.createElement('label');
+        label.htmlFor = `cat_${categorie}`;
+        label.textContent = categorie;
+        
+        div.appendChild(checkbox);
+        div.appendChild(label);
+        container.appendChild(div);
+    });
+}
+
+async function chargerJoueursDepuisGoogleSheets() {
+    const bouton = document.getElementById('btnMiseAJourJoueurs');
+    const message = document.getElementById('miseAJourMessage');
+
+    if (bouton) {
+        bouton.disabled = true;
+        bouton.textContent = '⏳ Mise à jour en cours...';
+    }
+
+    try {
+        const separateur = scriptURL.includes('?') ? '&' : '?';
+        const response = await fetch(
+            scriptURL + separateur + 'action=joueurs&_=' + Date.now(),
+            { cache: 'no-store' }
+        );
+        const data = await response.json();
+
+        if (!response.ok || data.success === false) {
+            throw new Error(data.message || 'Impossible de charger les joueurs');
+        }
+
+        const nouvelleListe = data.joueursParCategorie || {};
+        if (Object.keys(nouvelleListe).length === 0) {
+            throw new Error('La feuille Joueurs est vide ou introuvable');
+        }
+
+        joueursParCategorie = nouvelleListe;
+        initializeCategories();
+        updateJoueursDisplay();
+
+        if (message) {
+            const total = Object.values(joueursParCategorie)
+                .reduce((compte, joueurs) => compte + joueurs.length, 0);
+            message.textContent = '✅ Liste mise à jour : ' + total + ' joueur(s).';
+            message.style.color = '#16803c';
+        }
+    } catch (error) {
+        console.error('Chargement des joueurs impossible:', error);
+        if (message) {
+            message.textContent = '✗ Mise à jour impossible : ' + error.message;
+            message.style.color = '#b42318';
+        }
+    } finally {
+        if (bouton) {
+            bouton.disabled = false;
+            bouton.textContent = '🔄 Mettre à jour la liste des joueurs';
+        }
+    }
+}
+
+document.getElementById('btnMiseAJourJoueurs')
+    .addEventListener('click', chargerJoueursDepuisGoogleSheets);
+
+const ajoutJoueurModal = document.getElementById('ajoutJoueurModal');
+const nouvelleCategorie = document.getElementById('nouvelleCategorie');
+
+function remplirCategoriesAjout() {
+    nouvelleCategorie.innerHTML = '';
+    Object.keys(joueursParCategorie).forEach(categorie => {
+        const option = document.createElement('option');
+        option.value = categorie;
+        option.textContent = categorie;
+        nouvelleCategorie.appendChild(option);
+    });
+}
+
+document.getElementById('btnAjouterJoueur').addEventListener('click', function() {
+    remplirCategoriesAjout();
+    document.getElementById('ajoutJoueurMessage').textContent = '';
+    ajoutJoueurModal.hidden = false;
+    document.getElementById('nouveauNom').focus();
+});
+
+document.getElementById('btnFermerAjoutJoueur').addEventListener('click', function() {
+    ajoutJoueurModal.hidden = true;
+});
+
+document.getElementById('btnValiderAjoutJoueur').addEventListener('click', async function() {
+    const nom = document.getElementById('nouveauNom').value.trim();
+    const prenom = document.getElementById('nouveauPrenom').value.trim();
+    const categorie = nouvelleCategorie.value;
+    const message = document.getElementById('ajoutJoueurMessage');
+
+    if (!nom || !prenom || !categorie) {
+        message.textContent = '✗ Remplis le nom, le prénom et la catégorie.';
+        message.style.color = '#b42318';
+        return;
+    }
+
+    this.disabled = true;
+    this.textContent = '⏳ Ajout en cours...';
+
+    try {
+        const response = await fetch(scriptURL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+                action: 'ajouterJoueur',
+                nom: nom,
+                prenom: prenom,
+                categorie: categorie
+            })
+        });
+        const data = await response.json();
+
+        if (!response.ok || data.success === false) {
+            throw new Error(data.message || 'Ajout impossible');
+        }
+
+        message.textContent = '✅ ' + data.message;
+        message.style.color = '#16803c';
+        document.getElementById('nouveauNom').value = '';
+        document.getElementById('nouveauPrenom').value = '';
+        await chargerJoueursDepuisGoogleSheets();
+        setTimeout(() => {
+            ajoutJoueurModal.hidden = true;
+        }, 900);
+    } catch (error) {
+        message.textContent = '✗ ' + error.message;
+        message.style.color = '#b42318';
+    } finally {
+        this.disabled = false;
+        this.textContent = 'Ajouter le joueur';
+    }
+});
+
+// Mettre à jour l'affichage des joueurs selon les catégories sélectionnées
+function updateJoueursDisplay() {
+    const selectedCategories = Array.from(document.querySelectorAll('#categoriesSelect input[type="checkbox"]:checked'))
+        .map(cb => cb.value);
+    
+    const container = document.getElementById('joueursContainer');
+    
+    if (selectedCategories.length === 0) {
+        container.innerHTML = '<div class="message-vide">Sélectionnez d\'abord une ou plusieurs catégories ci-dessus</div>';
+        updateCount();
+        return;
+    }
+    
+    container.innerHTML = '';
+    
+    selectedCategories.forEach((categorie, catIndex) => {
+        const section = document.createElement('div');
+        section.className = 'categorie-section active';
+        
+        const titleDiv = document.createElement('div');
+        titleDiv.style.display = 'flex';
+        titleDiv.style.justifyContent = 'space-between';
+        titleDiv.style.alignItems = 'center';
+        titleDiv.style.marginBottom = '10px';
+        
+        const title = document.createElement('div');
+        title.className = 'categorie-title';
+        title.textContent = categorie;
+        
+        const buttonsDiv = document.createElement('div');
+        buttonsDiv.style.display = 'flex';
+        buttonsDiv.style.gap = '5px';
+        
+        const btnAll = document.createElement('button');
+        btnAll.type = 'button';
+        btnAll.textContent = 'Tous';
+        btnAll.style.padding = '5px 10px';
+        btnAll.style.fontSize = '12px';
+        btnAll.style.cursor = 'pointer';
+        btnAll.style.backgroundColor = '#28a745';
+        btnAll.style.color = 'white';
+        btnAll.style.border = 'none';
+        btnAll.style.borderRadius = '4px';
+        btnAll.addEventListener('click', function() {
+            section.querySelectorAll('.joueur-checkbox').forEach(cb => cb.checked = true);
+            updateCount();
+        });
+        
+        const btnNone = document.createElement('button');
+        btnNone.type = 'button';
+        btnNone.textContent = 'Aucun';
+        btnNone.style.padding = '5px 10px';
+        btnNone.style.fontSize = '12px';
+        btnNone.style.cursor = 'pointer';
+        btnNone.style.backgroundColor = '#dc3545';
+        btnNone.style.color = 'white';
+        btnNone.style.border = 'none';
+        btnNone.style.borderRadius = '4px';
+        btnNone.addEventListener('click', function() {
+            section.querySelectorAll('.joueur-checkbox').forEach(cb => cb.checked = false);
+            updateCount();
+        });
+        
+        buttonsDiv.appendChild(btnAll);
+        buttonsDiv.appendChild(btnNone);
+        titleDiv.appendChild(title);
+        titleDiv.appendChild(buttonsDiv);
+        section.appendChild(titleDiv);
+        
+        joueursParCategorie[categorie].forEach((joueur, joueurIndex) => {
+            const div = document.createElement('div');
+            div.className = 'joueur-item';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = `joueur_${categorie}_${joueurIndex}`;
+            checkbox.className = 'joueur-checkbox';
+            checkbox.value = joueur;
+            checkbox.dataset.categorie = categorie;
+            checkbox.addEventListener('change', updateCount);
+            
+            const label = document.createElement('label');
+            label.htmlFor = `joueur_${categorie}_${joueurIndex}`;
+            label.textContent = joueur;
+            
+            // Case capitaine
+            const checkboxCap = document.createElement('input');
+            checkboxCap.type = 'checkbox';
+            checkboxCap.className = 'capitaine-checkbox';
+            checkboxCap.dataset.joueur = joueur;
+            checkboxCap.title = 'Capitaine';
+            checkboxCap.style.marginLeft = '10px';
+            checkboxCap.style.width = '18px';
+            checkboxCap.style.height = '18px';
+            checkboxCap.style.cursor = 'pointer';
+            checkboxCap.id = `cap_${categorie}_${joueurIndex}`;
+            checkboxCap.addEventListener('change', function() {
+                if (this.checked) {
+                    // Décocher tous les autres capitaines
+                    document.querySelectorAll('.capitaine-checkbox').forEach(cb => {
+                        if (cb !== this) cb.checked = false;
+                    });
+                }
+            });
+            
+            const labelCap = document.createElement('label');
+            labelCap.textContent = '(C)';
+            labelCap.style.cursor = 'pointer';
+            labelCap.style.fontSize = '12px';
+            labelCap.style.fontWeight = 'bold';
+            labelCap.style.color = '#0066cc';
+            labelCap.style.marginLeft = '3px';
+            labelCap.htmlFor = `cap_${categorie}_${joueurIndex}`;
+            
+            div.appendChild(checkbox);
+            div.appendChild(label);
+            div.appendChild(checkboxCap);
+            div.appendChild(labelCap);
+            section.appendChild(div);
+        });
+        
+        container.appendChild(section);
+    });
+    
+    updateCount();
+}
+
+// Mettre à jour le compteur de joueurs
+function updateCount() {
+    const checkboxes = document.querySelectorAll('#joueursContainer .joueur-checkbox:checked');
+    const nbJoueurs = checkboxes.length;
+    document.getElementById('countJoueurs').textContent = nbJoueurs;
+    
+    if (nbJoueurs > 14) {
+        alert('⚠️ Attention ! Vous avez sélectionné ' + nbJoueurs + ' joueurs.\nLe maximum est 14 joueurs.');
+    }
+    
+    updateNumerosContainer();
+}
+
+// Mettre à jour le formulaire des numéros
+function updateNumerosContainer() {
+    const checkboxes = document.querySelectorAll('#joueursContainer .joueur-checkbox:checked');
+    const container = document.getElementById('numerosContainer');
+    container.innerHTML = '';
+    
+    checkboxes.forEach((checkbox, index) => {
+        const div = document.createElement('div');
+        div.className = 'numero-field';
+        
+        const label = document.createElement('label');
+        label.textContent = checkbox.value + ' (' + checkbox.dataset.categorie + ')';
+        
+        const inputsDiv = document.createElement('div');
+        inputsDiv.style.display = 'flex';
+        inputsDiv.style.gap = '10px';
+        inputsDiv.style.alignItems = 'center';
+        
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.min = '1';
+        input.max = '99';
+        input.placeholder = 'Numéro';
+        input.className = 'numero-input';
+        input.dataset.joueur = checkbox.value;
+        input.style.flex = '1';
+        
+        inputsDiv.appendChild(input);
+        
+        div.appendChild(label);
+        div.appendChild(inputsDiv);
+        container.appendChild(div);
+    });
+}
+
+// Afficher/masquer le champ numéros
+document.getElementById('checkNumeroJoueur').addEventListener('change', function() {
+    const champNumero = document.getElementById('champNumero');
+    if (this.checked) {
+        champNumero.classList.add('visible');
+        updateNumerosContainer();
+    } else {
+        champNumero.classList.remove('visible');
+    }
+});
+
+// Envoyer le formulaire
+document.getElementById('formulaire').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const checkboxes = document.querySelectorAll('#joueursContainer .joueur-checkbox:checked');
+    const numeroChecked = document.getElementById('checkNumeroJoueur').checked;
+    
+    if (checkboxes.length === 0) {
+        alert('Veuillez sélectionner au moins un joueur !');
+        return;
+    }
+
+    if (numeroChecked) {
+        const numeros = Array.from(document.querySelectorAll('.numero-input'))
+            .map(input => Number(input.value))
+            .filter(numero => Number.isInteger(numero) && numero >= 1 && numero <= 99);
+        const numerosVus = new Set();
+        const numerosDupliques = numeros.filter(numero => {
+            if (numerosVus.has(numero)) {
+                return true;
+            }
+            numerosVus.add(numero);
+            return false;
+        });
+
+        if (numerosDupliques.length > 0) {
+            alert('⚠️ Chaque joueur doit avoir un numéro différent.\\nNuméro en double : ' + numerosDupliques[0]);
+            return;
+        }
+    }
+    
+    const joueurs = [];
+    checkboxes.forEach(checkbox => {
+        const capitaineCheckbox = document.querySelector(`.capitaine-checkbox[data-joueur="${checkbox.value}"]`);
+        const estCapitaine = capitaineCheckbox && capitaineCheckbox.checked;
+        
+        const joueur = {
+            nom: checkbox.value,
+            categorie: checkbox.dataset.categorie,
+            numero: 'Non attribué',
+            capitaine: estCapitaine
+        };
+        
+        if (numeroChecked) {
+            const input = document.querySelector(`input.numero-input[data-joueur="${checkbox.value}"]`);
+            if (input && input.value) {
+                joueur.numero = input.value;
+            }
+        }
+        
+        joueurs.push(joueur);
+    });
+
+    // Données à envoyer
+    const donnees = { joueurs: joueurs };
+    
+    // Afficher les messages
+    const successMessage = document.getElementById('successMessage');
+    const errorMessage = document.getElementById('errorMessage');
+    
+    // Masquer les messages existants
+    successMessage.classList.remove('show');
+    errorMessage.classList.remove('show');
+    
+    // Envoyer les données
+    fetch(scriptURL, {
+        method: 'POST',
+        body: JSON.stringify(donnees),
+        headers: {
+            // Evite la requête preflight CORS de Google Apps Script.
+            'Content-Type': 'text/plain;charset=utf-8'
+        }
+    })
+    .then(async response => {
+        const texte = await response.text();
+        let data = {};
+
+        if (texte) {
+            try {
+                data = JSON.parse(texte);
+            } catch (parseError) {
+                // Une page HTML peut être renvoyée après le traitement réussi
+                // par Google Apps Script. Elle ne doit pas masquer l'envoi.
+            }
+        }
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Réponse inattendue du serveur');
+        }
+
+        if (data.success === false) {
+            throw new Error(data.message || 'Le serveur n’a pas accepté la composition');
+        }
+
+        // L'email étant envoyé, afficher la confirmation même si la réponse
+        // Google n'est pas un JSON lisible par le navigateur.
+        alert('✅ Composition envoyée avec succès !');
+        successMessage.classList.add('show');
+        return;
+    })
+    .then(() => {
+        if (successMessage.classList.contains('show')) {
+            successMessage.classList.add('show');
+            
+            // Réinitialiser après 3 secondes
+            setTimeout(() => {
+                this.reset();
+                initializeCategories();
+                updateJoueursDisplay();
+                document.getElementById('countJoueurs').textContent = '0';
+                document.getElementById('champNumero').classList.remove('visible');
+                successMessage.classList.remove('show');
+            }, 3000);
+        } else {
+            errorMessage.textContent = '✗ Erreur: ' + (data.message || 'Une erreur est survenue');
+            errorMessage.classList.add('show');
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        errorMessage.textContent = '✗ Erreur de connexion: ' + error.message;
+        errorMessage.classList.add('show');
+    });
+});
+
+// Charger automatiquement la liste depuis Google Sheets au chargement.
+chargerJoueursDepuisGoogleSheets();
+</script>
+
+</body>
+</html>
