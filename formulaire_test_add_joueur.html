@@ -364,6 +364,22 @@ button:active {
     <h1>Composition d'équipe ASLM</h1>
 
     <form id="formulaire">
+    <div class="form-group">
+        <h2>📝 Informations de l'équipe</h2>
+        <label for="equipe">Équipe</label>
+        <select id="equipe" required>
+            <option value="">Choisir une équipe</option>
+            <option>U15 A</option>
+            <option>U15 B</option>
+            <option>U18</option>
+            <option>Seniors A</option>
+            <option>Seniors B</option>
+            <option>Veterans</option>
+        </select>
+        <label for="dateMatch">Date du match</label>
+        <input type="date" id="dateMatch" required>
+    </div>
+
         <!-- Étape 1: Sélectionner les catégories -->
         <div class="form-group">
             <h2>📋 Étape 1 : Sélectionner les catégories</h2>
@@ -549,7 +565,7 @@ let joueursParCategorie = {
 };
 
 // URL du Google Apps Script déployé
-const scriptURL = 'https://script.google.com/macros/s/AKfycbxnuxuisHUJpZzxwA2YkCxoSx5moO_MsgspKRgS2u-dPfkcKxz6bJG5FfFFjjItgn5bwA/exec';
+const scriptURL = 'https://script.google.com/macros/s/AKfycbyxfbM99t9I17Kl_cwotFLBVZRUu_GZ2-tGJNiPsuf5ZSqOnR2jzFz-iExMe7N8jsnuuQ/exec';
 
 // Initialiser les catégories à cocher
 function initializeCategories() {
@@ -679,6 +695,38 @@ document.getElementById('btnValiderAjoutJoueur').addEventListener('click', async
                 categorie: categorie
             })
         });
+
+        async function supprimerJoueur(nom, categorie) {
+            if (!confirm('Retirer ' + nom + ' de la catégorie ' + categorie + ' ?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(scriptURL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        action: 'supprimerJoueur',
+                        nom: nom,
+                        categorie: categorie
+                    })
+                });
+                const data = await response.json();
+
+                if (!response.ok || data.success === false) {
+                    throw new Error(data.message || 'Suppression impossible');
+                }
+
+                const message = document.getElementById('miseAJourMessage');
+                message.textContent = '✅ ' + data.message;
+                message.style.color = '#16803c';
+                await chargerJoueursDepuisGoogleSheets();
+            } catch (error) {
+                const message = document.getElementById('miseAJourMessage');
+                message.textContent = '✗ ' + error.message;
+                message.style.color = '#b42318';
+            }
+        }
         const data = await response.json();
 
         if (!response.ok || data.success === false) {
@@ -786,6 +834,15 @@ function updateJoueursDisplay() {
             const label = document.createElement('label');
             label.htmlFor = `joueur_${categorie}_${joueurIndex}`;
             label.textContent = joueur;
+
+            const btnSupprimer = document.createElement('button');
+            btnSupprimer.type = 'button';
+            btnSupprimer.textContent = 'Supprimer';
+            btnSupprimer.style.width = 'auto';
+            btnSupprimer.style.padding = '5px 8px';
+            btnSupprimer.style.marginLeft = '8px';
+            btnSupprimer.style.background = '#b42318';
+            btnSupprimer.addEventListener('click', () => supprimerJoueur(joueur, categorie));
             
             // Case capitaine
             const checkboxCap = document.createElement('input');
@@ -818,6 +875,7 @@ function updateJoueursDisplay() {
             
             div.appendChild(checkbox);
             div.appendChild(label);
+            div.appendChild(btnSupprimer);
             div.appendChild(checkboxCap);
             div.appendChild(labelCap);
             section.appendChild(div);
@@ -942,7 +1000,11 @@ document.getElementById('formulaire').addEventListener('submit', function(e) {
     });
 
     // Données à envoyer
-    const donnees = { joueurs: joueurs };
+    const donnees = {
+        joueurs: joueurs,
+        equipe: document.getElementById('equipe').value,
+        dateMatch: document.getElementById('dateMatch').value
+    };
     
     // Afficher les messages
     const successMessage = document.getElementById('successMessage');
