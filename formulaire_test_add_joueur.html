@@ -565,7 +565,7 @@ let joueursParCategorie = {
 };
 
 // URL du Google Apps Script déployé
-const scriptURL = 'https://script.google.com/macros/s/AKfycbx0_SBy1VtfUsT8DP9fJfFygYZ_Qxw34Rn2lA2HyInjSKJvekjvgnVYpZ__uRdDwFMa6w/exec?v=999';
+const scriptURL = 'https://script.google.com/macros/s/AKfycbyxfbM99t9I17Kl_cwotFLBVZRUu_GZ2-tGJNiPsuf5ZSqOnR2jzFz-iExMe7N8jsnuuQ/exec';
 
 // Initialiser les catégories à cocher
 function initializeCategories() {
@@ -696,6 +696,37 @@ document.getElementById('btnValiderAjoutJoueur').addEventListener('click', async
             })
         });
 
+        async function supprimerJoueur(nom, categorie) {
+            if (!confirm('Retirer ' + nom + ' de la catégorie ' + categorie + ' ?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(scriptURL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        action: 'supprimerJoueur',
+                        nom: nom,
+                        categorie: categorie
+                    })
+                });
+                const data = await response.json();
+
+                if (!response.ok || data.success === false) {
+                    throw new Error(data.message || 'Suppression impossible');
+                }
+
+                const message = document.getElementById('miseAJourMessage');
+                message.textContent = '✅ ' + data.message;
+                message.style.color = '#16803c';
+                await chargerJoueursDepuisGoogleSheets();
+            } catch (error) {
+                const message = document.getElementById('miseAJourMessage');
+                message.textContent = '✗ ' + error.message;
+                message.style.color = '#b42318';
+            }
+        }
         const data = await response.json();
 
         if (!response.ok || data.success === false) {
@@ -718,38 +749,6 @@ document.getElementById('btnValiderAjoutJoueur').addEventListener('click', async
         this.textContent = 'Ajouter le joueur';
     }
 });
-
-async function supprimerJoueur(nom, categorie) {
-    if (!confirm('Retirer ' + nom + ' de la catégorie ' + categorie + ' ?')) {
-        return;
-    }
-
-    try {
-        const response = await fetch(scriptURL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({
-                action: 'supprimerJoueur',
-                nom: nom,
-                categorie: categorie
-            })
-        });
-        const data = await response.json();
-
-        if (!response.ok || data.success === false) {
-            throw new Error(data.message || 'Suppression impossible');
-        }
-
-        const message = document.getElementById('miseAJourMessage');
-        message.textContent = '✅ ' + data.message;
-        message.style.color = '#16803c';
-        await chargerJoueursDepuisGoogleSheets();
-    } catch (error) {
-        const message = document.getElementById('miseAJourMessage');
-        message.textContent = '✗ ' + error.message;
-        message.style.color = '#b42318';
-    }
-}
 
 // Mettre à jour l'affichage des joueurs selon les catégories sélectionnées
 function updateJoueursDisplay() {
