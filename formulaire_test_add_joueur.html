@@ -363,7 +363,7 @@ button:active {
 
     <h1>Composition d'équipe ASLM</h1>
 
-    <form id="formulaire">
+    <form id="formulaire" novalidate>
     <div class="form-group">
         <h2>📝 Informations de l'équipe</h2>
         <label for="equipe">Équipe</label>
@@ -398,11 +398,11 @@ button:active {
                 <button type="button" class="modal-close" id="btnFermerAjoutJoueur" aria-label="Fermer">×</button>
                 <h2 id="ajoutJoueurTitre">Ajouter un joueur</h2>
                 <label for="nouveauNom">Nom</label>
-                <input type="text" id="nouveauNom" maxlength="60" required>
+                <input type="text" id="nouveauNom" maxlength="60">
                 <label for="nouveauPrenom">Prénom</label>
-                <input type="text" id="nouveauPrenom" maxlength="60" required>
+                <input type="text" id="nouveauPrenom" maxlength="60">
                 <label for="nouvelleCategorie">Catégorie</label>
-                <select id="nouvelleCategorie" required></select>
+                <select id="nouvelleCategorie"></select>
                 <button type="button" class="button" id="btnValiderAjoutJoueur">Ajouter le joueur</button>
                 <div id="ajoutJoueurMessage" class="message-vide" aria-live="polite"></div>
             </div>
@@ -697,37 +697,6 @@ document.getElementById('btnValiderAjoutJoueur').addEventListener('click', async
             })
         });
 
-        async function supprimerJoueur(nom, categorie) {
-            if (!confirm('Retirer ' + nom + ' de la catégorie ' + categorie + ' ?')) {
-                return;
-            }
-
-            try {
-                const response = await fetch(scriptURL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({
-                        action: 'supprimerJoueur',
-                        nom: nom,
-                        categorie: categorie
-                    })
-                });
-                const data = await response.json();
-
-                if (!response.ok || data.success === false) {
-                    throw new Error(data.message || 'Suppression impossible');
-                }
-
-                const message = document.getElementById('miseAJourMessage');
-                message.textContent = '✅ ' + data.message;
-                message.style.color = '#16803c';
-                await chargerJoueursDepuisGoogleSheets();
-            } catch (error) {
-                const message = document.getElementById('miseAJourMessage');
-                message.textContent = '✗ ' + error.message;
-                message.style.color = '#b42318';
-            }
-        }
         const data = await response.json();
 
         if (!response.ok || data.success === false) {
@@ -750,6 +719,38 @@ document.getElementById('btnValiderAjoutJoueur').addEventListener('click', async
         this.textContent = 'Ajouter le joueur';
     }
 });
+
+async function supprimerJoueur(nom, categorie) {
+    if (!confirm('Retirer ' + nom + ' de la catégorie ' + categorie + ' ?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(scriptURL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+                action: 'supprimerJoueur',
+                nom: nom,
+                categorie: categorie
+            })
+        });
+        const data = await response.json();
+
+        if (!response.ok || data.success === false) {
+            throw new Error(data.message || 'Suppression impossible');
+        }
+
+        const message = document.getElementById('miseAJourMessage');
+        message.textContent = '✅ ' + data.message;
+        message.style.color = '#16803c';
+        await chargerJoueursDepuisGoogleSheets();
+    } catch (error) {
+        const message = document.getElementById('miseAJourMessage');
+        message.textContent = '✗ ' + error.message;
+        message.style.color = '#b42318';
+    }
+}
 
 // Mettre à jour l'affichage des joueurs selon les catégories sélectionnées
 function updateJoueursDisplay() {
@@ -948,8 +949,22 @@ document.getElementById('checkNumeroJoueur').addEventListener('change', function
 });
 
 // Envoyer le formulaire
-document.getElementById('formulaire').addEventListener('submit', function(e) {
+document.getElementById('formulaire')
+.addEventListener('submit', function(e) {
+
     e.preventDefault();
+
+    if (!document.getElementById('equipe').value) {
+        alert('Choisissez une équipe');
+        return;
+    }
+
+    if (!document.getElementById('dateMatch').value) {
+        alert('Choisissez une date');
+        return;
+    }
+
+    // suite du code
 
     const checkboxes = document.querySelectorAll('#joueursContainer .joueur-checkbox:checked');
     const numeroChecked = document.getElementById('checkNumeroJoueur').checked;
@@ -1025,32 +1040,42 @@ document.getElementById('formulaire').addEventListener('submit', function(e) {
         }
     })
     .then(async response => {
-        const texte = await response.text();
-        let data = {};
 
-        if (texte) {
-            try {
-                data = JSON.parse(texte);
-            } catch (parseError) {
-                // Une page HTML peut être renvoyée après le traitement réussi
-                // par Google Apps Script. Elle ne doit pas masquer l'envoi.
-            }
-        }
+    console.log("Status :", response.status);
 
-        if (!response.ok) {
-            throw new Error(data.message || 'Réponse inattendue du serveur');
-        }
+    const texte = await response.text();
 
-        if (data.success === false) {
-            throw new Error(data.message || 'Le serveur n’a pas accepté la composition');
-        }
+    console.log("Réponse brute :", texte);
 
-        // L'email étant envoyé, afficher la confirmation même si la réponse
-        // Google n'est pas un JSON lisible par le navigateur.
-        alert('✅ Composition envoyée avec succès !');
-        successMessage.classList.add('show');
-        return;
-    })
+    let data;
+
+    try {
+        data = JSON.parse(texte);
+    } catch(e) {
+        throw new Error("Réponse invalide : " + texte);
+    }
+
+    console.log(data);
+
+    if (!data.success) {
+        throw new Error(data.message);
+    }
+
+    successMessage.classList.add("show");
+
+    alert("✅ Composition enregistrée");
+
+})
+.catch(error => {
+
+    console.error(error);
+
+    errorMessage.textContent =
+        "✗ " + error.message;
+
+    errorMessage.classList.add("show");
+
+});
     .then(() => {
         if (successMessage.classList.contains('show')) {
             successMessage.classList.add('show');
